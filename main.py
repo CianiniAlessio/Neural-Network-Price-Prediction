@@ -105,20 +105,32 @@ percentage = 0
 commission = 0.0002
 volume = 0
 while True:
+    
     # GETTING THE BID
     #bid = requests.get(url = "https://api.cryptowat.ch/markets/binance/btcusdt/orderbook?limit=1").json()['result']['bids'][0][0]
     
     last_starting = (float)(client.get_symbol_ticker(symbol = "BTCUSDT")['price'])
     
+    
+    #GETTIN THE VOLUME TO CALCULATE THE RATIO AS THIRD INPUT
+    
     response_volume = client.get_historical_klines("BTCUSDT", client.KLINE_INTERVAL_15MINUTE)
-
+    
+    # LEN()-2 MEANS TWO END OF CANDLES BEFORE
+    
     volume = (float)((response_volume)[len(response_volume)-2][5])
     new_volume = (float)((response_volume)[len(response_volume)-1][5])
 
     volume_ratio = (float)((new_volume/volume) - 1)
+    
     print("Volume Ratio: {}".format(volume_ratio))    
+    
+    #CALCULATE SECOND INPUT (EXPONENTIAL MOVING AVERAGE)
+    
     ema = Exp_m_a(last_starting,ema,length)
+    
     print("Ema : {}".format(ema))
+    
     X_1 = np.array([(float)(last_starting)])
     X_2 = np.array([(float)(volume_ratio)])
     X_3 = np.array([(float)(ema)])
@@ -128,10 +140,12 @@ while True:
     k = [X_1,X_2,X_3]
     
     #PREDICT THE PRICE
+    
     pred = model.predict(k)[0][0]
     print("last : {} - prediction : {}".format(last_starting,pred))
 
     # WAITING 
+    
     time.sleep(2)
 
     #GETTING THE NEW PRICE
